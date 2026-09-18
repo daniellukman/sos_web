@@ -106,7 +106,7 @@ export default function LoginForm() {
           </>
         ) : (
           <>
-            Masuk
+            Login
             <span className="transition-transform group-hover:translate-x-0.5" aria-hidden>
               →
             </span>

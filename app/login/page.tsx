@@ -55,8 +55,7 @@ export default async function LoginPage() {
               <img src="/logo-sos.svg" alt="Logo SOS" width={48} height={48} className="size-12" />
               <p className="text-sm font-medium text-accent-ink">Star Office Solutions</p>
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight">SOS Login</h1>
-            <p className="mt-2 text-sm text-ink-2">Selamat datang kembali. Masuk dengan user ID aplikasi Anda.</p>
+            <h1 className="text-3xl font-semibold tracking-tight">SOS System Login</h1>
           </div>
           <LoginForm />
         </div>
