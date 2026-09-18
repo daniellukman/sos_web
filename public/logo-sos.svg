@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200" width="512" height="512" role="img" aria-label="Logo SOS">
+  <defs>
+    <radialGradient id="sos-blue" cx="0" cy="0" r="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b9d0ee"/>
+      <stop offset="0.35" stop-color="#7ea3d8"/>
+      <stop offset="1" stop-color="#3a66ad"/>
+    </radialGradient>
+    <radialGradient id="sos-peach" cx="0" cy="0" r="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff1e4"/>
+      <stop offset="0.3" stop-color="#fbd2ae"/>
+      <stop offset="1" stop-color="#f0a46e"/>
+    </radialGradient>
+  </defs>
+  <!-- Bintang biru diagonal (belakang) -->
+  <path d="M-67,-67 L0,-13 L67,-67 L13,0 L67,67 L0,13 L-67,67 L-13,0 Z" fill="url(#sos-blue)"/>
+  <!-- Bintang peach vertikal-horizontal (depan) -->
+  <path d="M0,-96 L12,-12 L94,0 L12,12 L0,96 L-12,12 L-94,0 L-12,-12 Z" fill="url(#sos-peach)"/>
+</svg>
