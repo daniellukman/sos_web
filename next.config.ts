@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Build untuk Azure App Service: .next/standalone berisi server.js + node_modules yang dipakai saja
+  output: "standalone",
   serverExternalPackages: ["mssql"],
   // Sembunyikan tombol "N" Next.js di pojok kiri bawah saat npm run dev
   devIndicators: false,

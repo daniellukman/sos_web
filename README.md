@@ -45,3 +45,24 @@ User yang tidak punya akses SOS tetap bisa login untuk GL.
   `IMPORT_DEBET` / `IMPORT_CREDIT`. Draft hasil baca disimpan di memori server (hilang saat restart / setelah 4 jam).
 - **`GLBalnc` dan `GLBalnc_DTL` tidak pernah ditulis dari web** — posting dilakukan program lain, jadi jurnal baru
   tampil di Neraca Saldo / Rugi Laba / Neraca setelah proses posting.
+
+## Deploy ke Azure App Service
+
+Setiap push ke `main` otomatis di-build dan di-deploy oleh GitHub Actions
+(`.github/workflows/azure-app-service.yml`). Build memakai `output: "standalone"`; paketnya berisi
+`server.js`, `node_modules` yang dipakai saja, `public/`, `.next/static/`, dan `start.js` (dari `deploy/`).
+
+App Service (Linux, Node 22 LTS, minimal paket B1, **1 instance** karena draft foto disimpan di memori):
+
+| Pengaturan | Nilai |
+| ---------- | ----- |
+| Startup command | `node start.js` |
+| Always On / HTTPS Only | On / On |
+| SCM Basic Auth Publishing Credentials | On (dipakai publish profile) |
+| Environment variables | `AZURE_SQL_SERVER`, `AZURE_SQL_DATABASE`, `AZURE_SQL_USER`, `AZURE_SQL_PASSWORD`, `SESSION_SECRET` (baru, acak ≥ 32 karakter), `ANTHROPIC_API_KEY`, `TZ=Asia/Jakarta`, `SCM_DO_BUILD_DURING_DEPLOYMENT=false` |
+
+- Azure SQL → Networking: aktifkan *Allow Azure services and resources to access this server*.
+- GitHub repo → Settings → Secrets and variables → Actions: variable `AZURE_WEBAPP_NAME` dan secret
+  `AZURE_WEBAPP_PUBLISH_PROFILE` (isi file *Download publish profile*).
+- Domain: CNAME subdomain (mis. `sos.staroffice.id`) ke `<app>.azurewebsites.net` + TXT `asuid.<subdomain>`,
+  lalu *App Service Managed Certificate* (gratis). Login wajib HTTPS karena cookie sesi `secure` di produksi.
