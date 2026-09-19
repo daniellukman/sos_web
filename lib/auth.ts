@@ -56,6 +56,28 @@ export async function verifyCredentials(userid: string, password: string) {
   return { userid: user.USERID, name: user.NAME || user.USERID };
 }
 
+export const PASSWORD_MIN = 6;
+// bcrypt hanya memakai 72 byte pertama; lebih dari itu tidak aman dipakai
+export const PASSWORD_MAX = 72;
+
+/**
+ * Ganti password user di USERTBL setelah password lama dicek. false jika password lama salah.
+ * Hash dibuat dengan cost 12 dan awalan $2a$ (format yang dibaca aplikasi desktop; hash cost 12 sudah terbukti diterima desktop)
+ * (bcryptjs menulis $2b$; algoritmanya identik untuk password ≤ 72 byte).
+ */
+export async function changePassword(userid: string, lama: string, baru: string): Promise<boolean> {
+  if (!(await verifyCredentials(userid, lama))) return false;
+  // Fungsi pengganti (bukan string) agar "$2" tidak dibaca sebagai referensi grup regex
+  const hash = (await bcrypt.hash(baru, 12)).replace(/^\$2b\$/, () => "$2a$");
+  const pool = await getPool();
+  const r = await pool
+    .request()
+    .input("userid", sql.VarChar(50), userid)
+    .input("pwd", sql.VarChar(255), hash)
+    .query("UPDATE dbo.USERTBL SET PWD = @pwd WHERE USERID = @userid");
+  return r.rowsAffected[0] > 0;
+}
+
 export async function createSession(user: { userid: string; name: string }) {
   const exp = Date.now() + SESSION_HOURS * 60 * 60 * 1000;
   const store = await cookies();

@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SESSION_COOKIE, createSession, verifyCredentials } from "@/lib/auth";
-import { getCompany } from "@/lib/company";
+import { getUserCompanies } from "@/lib/company";
 
 export type LoginState = { error?: string; userid?: string };
 
@@ -15,8 +15,9 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   let user;
   try {
     user = await verifyCredentials(userid, password);
-    if (user && !(await getCompany(user.userid))) {
-      return { error: "User ini tidak punya akses ke PT. SOS.", userid };
+    // Boleh masuk jika terdaftar untuk minimal satu perusahaan (dashboard SOS atau GL)
+    if (user && (await getUserCompanies(user.userid)).length === 0) {
+      return { error: "User ini belum terdaftar untuk perusahaan mana pun.", userid };
     }
   } catch (err) {
     console.error("Login gagal:", err);

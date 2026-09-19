@@ -5,12 +5,13 @@ export type ExcelColumn<T> = {
   header: string;
   width: number;
   value: (row: T) => string | number | Date | null;
-  format?: "tanggal" | "rupiah" | "angka";
+  /** rupiahPolos = seperti rupiah tapi angka negatif tidak berwarna merah */
+  format?: "tanggal" | "rupiah" | "rupiahPolos" | "angka";
   /** Tambahkan SUM di baris total */
   total?: boolean;
 };
 
-const FORMAT = { tanggal: "dd/mm/yyyy", rupiah: "#,##0;[Red]-#,##0", angka: "0" } as const;
+const FORMAT = { tanggal: "dd/mm/yyyy", rupiah: "#,##0;[Red]-#,##0", rupiahPolos: "#,##0;-#,##0", angka: "0" } as const;
 const HEADER_ROW = 4;
 
 /** "2026-09-17" -> Date (UTC) agar tersimpan sebagai tanggal asli Excel. */
@@ -28,6 +29,11 @@ export async function buatExcel<T>(opts: {
   columns: ExcelColumn<T>[];
   rows: T[];
   labelTotal: string;
+  /**
+   * Baris total yang nilainya sudah dihitung (bukan SUM kolom), dipakai jika data memuat
+   * baris induk yang sudah berisi total anak-anaknya sehingga SUM akan dobel. Array kosong = tanpa baris total.
+   */
+  barisTotal?: { label: string; nilai: (string | number | null)[] }[];
 }): Promise<ArrayBuffer> {
   const wb = new ExcelJS.Workbook();
   wb.created = new Date();
@@ -57,16 +63,27 @@ export async function buatExcel<T>(opts: {
   const first = HEADER_ROW + 1;
   const last = HEADER_ROW + opts.rows.length;
   if (opts.rows.length) {
-    const total = ws.addRow([opts.labelTotal]);
-    opts.columns.forEach((c, i) => {
-      if (!c.total) return;
-      const col = ws.getColumn(i + 1).letter;
-      total.getCell(i + 1).value = { formula: `SUM(${col}${first}:${col}${last})` };
-    });
-    total.font = { bold: true };
-    total.eachCell({ includeEmpty: true }, (cell) => {
-      cell.border = { top: { style: "thin" } };
-    });
+    const barisTotal = opts.barisTotal ?? [
+      {
+        label: opts.labelTotal,
+        nilai: opts.columns.map((c, i) => {
+          if (!c.total) return null;
+          const col = ws.getColumn(i + 1).letter;
+          return `SUM(${col}${first}:${col}${last})`;
+        }),
+      },
+    ];
+    for (const b of barisTotal) {
+      const total = ws.addRow([b.label]);
+      b.nilai.forEach((v, i) => {
+        if (v === null || v === undefined || i === 0) return;
+        total.getCell(i + 1).value = typeof v === "string" && v.startsWith("SUM(") ? { formula: v } : v;
+      });
+      total.font = { bold: true };
+      total.eachCell({ includeEmpty: true }, (cell) => {
+        cell.border = { top: { style: "thin" } };
+      });
+    }
     ws.autoFilter = { from: { row: HEADER_ROW, column: 1 }, to: { row: last, column: opts.columns.length } };
   }
 
